@@ -1,0 +1,191 @@
+<!-- Presented here is the layout to a 'Raindrops Hitting Words' javaescipt page -->
+<!-- The idea is that raindrops are to be created at a random interval to fall from the top of the screen-->
+<!-- The raindrops fall and hit words that are displayed on the page-->
+<!-- The raindrops disappear when they hit another word-->
+
+< !DOCTYPE html >
+  < html >
+  < head >
+  < meta name = "viewport"
+content = "width=device-width, initial-scale=1.0" / >
+  < style >
+  canvas {
+    border: 1px solid #d3d3d3;
+    background - color: #f1f1f1;
+    
+<!-- Function StartGame is run on loadup-->
+  } < /style> < /head > < body onload = "startGame()" >
+  < script >
+
+  var myWords = [];
+var myRaindrops = [];
+var myScore;
+
+<!-- startGame() adds all the words to the site by storing them in a myWords[] array-->
+<!-- the funtion then runs myGameArea.start()-->
+
+function startGame() {
+  myWords = new component("30px", "Consolas", "black", 280, 40, "text");
+  myGameArea.start();
+}
+
+
+<!--play area empty initially-->
+<!--adjust SIZE by adjusting canvas.width + canvas.height-->
+var myGameArea = {
+    canvas: document.createElement("canvas"),
+    
+<!-- Start creates the canvas and sets the interval at which it runs-->
+<!-- updateGameArea every x frames-->
+    start: function() {
+      this.canvas.width = 100;
+      this.canvas.height = 100;
+      this.context = this.canvas.getContext("2d");
+      document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+      this.frameNo = 0;
+      this.interval = setInterval(updateGameArea, 20);
+    },
+    clear: function() {
+      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+  }
+  
+  <!-- components are the objects that can interact with each other-->
+  <!-- width & height adjust image size-->
+  <!-- Color adjusts image color-->
+  <!-- x & y adjust image coordinates-->
+  <!-- type determines whether its a word or an image-->
+  <!-- hit determines if an image is hit -->
+
+function component(width, height, color, x, y, type, hit) {
+  this.type = type;
+  this.score = 0;
+  this.width = width;
+  this.height = height;
+  this.speedX = 0;
+  this.speedY = 0;
+  this.x = x;
+  this.y = y;
+  this.hit = hit;
+
+  <!-- if object is an image  set extra image variable -->
+  if (type == "image" || type == "background") {
+    this.image = new Image();
+    this.image.src = color;
+  }
+
+  <!-- creates image based on image type if 'hit = false' -->
+  <!-- if 'hit = true' image is not created-->
+  <!-- text uses internal tex data and width x height, x, y-->
+  <!-- image pulls image from a url-->
+  this.update = function() {
+      if (this.hit = true) {
+        return;
+        else {
+          ctx = myGameArea.context;
+          if (type == "image" || type == "background") {
+            ctx.drawImage(this.image,
+              this.x, this.y, this.width, this.height);
+            if (type == "background") {
+              ctx.drawImage(this.image,
+                this.x + this.width, this.y, this.width, this.height);
+            } else {
+              (this.type == "text") {
+                ctx.font = this.width + " " + this.height;
+                ctx.fillStyle = color;
+                ctx.fillText(this.text, this.x, this.y);
+              }
+            }
+          }
+        }
+      }
+
+      <!-- newPos determines the new position of an object based on their speed-->
+      <!-- if speedx is negative object travels ^-->
+      <!-- if speedx is positive object travels Down-->
+      <!-- if speedy is negative object travels <-->
+      <!-- if speedy is positve object travels >-->
+
+      this.newPos = function() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.type == "background") {
+          if (this.x == -(this.width)) {
+            this.x = 0;
+          }
+        }
+      }
+
+      <!-- CrashWith determines whether two images collde in the canvas-->
+      <!-- CrashWith pulls the x & y coordinates of both objects-->
+      <!-- the function then compares that the coordinates do not intersect for either object-->
+
+      this.crashWith = function(otherobj) {
+        var myleft = this.x;
+        var myright = this.x + (this.width);
+        var mytop = this.y;
+        var mybottom = this.y + (this.height);
+        var otherleft = otherobj.x;
+        var otherright = otherobj.x + (otherobj.width);
+        var othertop = otherobj.y;
+        var otherbottom = otherobj.y + (otherobj.height);
+        var crash = true;
+        if ((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft > otherright)) {
+          crash = false;
+        }
+        return crash;
+      }
+    }
+<!-- Remove filters() an element from an array : →
+https://blog.mariusschulz.com/2016/07/16/removing-elements-from-javascript-arrays-->
+  function remove(array, element) {
+    const index = array.indexOf(element);
+
+    if (index !== -1) {
+      array.splice(index, 1);
+    }
+  }
+
+  <!-- UpdateArea determines whether objects listed in the myWords[i] & myRaindrops[j] collide-->
+  <!-- Compares MyRaindropsi to MyWordsj+1-->
+  <!-- If Raindrop hits a Word then Raindrop is removed from myRaindrops array-->
+  <!-- Word has its variable 'hit' changed to 'true'-->
+  <!-- The gameArea is cleared-->
+  <!-- A new Raindrop is created -->
+  <!-- All raindrops in the myRaindrops[] array are moved down one x-->
+  <!-- Words position are updated-->
+
+  function updateArea() {
+    for (i = 0; i < myRaindrops.length; i += 1) {
+      for (j = 0; j < myWords.length; j += 1)
+        if (myRaindrops[j].crashWith(myWords[i])) {
+
+          remove(myRaindrops, j);
+          myWords[i].hit = true
+        }
+    }
+
+    <!-- Clear; clears the canvas area of all objects-->
+
+    myGameArea.clear();
+
+    <!-- Creats new raindrop at the rate of x (everyinterval x)-->
+    <!-- New Raindrop begins at x=0 and a random location between canvas Width-->
+    <!-- Pushes new raindrop into myRaindrops[i] -->
+    <!-- Updates myRaindrops to be x - 1 position-->
+    <!-- Updates myWords to be in same position-->
+    myGameArea.frameNo += 1;
+    var randomY = Math.floor(Math.random() * myGameArea.canvas.width);
+    if (myGameArea.frameNo == 1 || everyinterval(150)) {
+      myRaindrops.push(new component(10, 10, 'green', 0, randomY, 'image', false));
+    }
+    for (i = 0; i < myRaindrops.length; i += 1) {
+      myRaindrops[i].x += -1;
+      myRaindrops[i].update();
+    }
+    myWords.update();
+  }
+
+
+  < /script> < br > < button onmousedown = "accelerate(-0.2)"
+  onmouseup = "accelerate(0.05)" > ACCELERATE < /button> < p > Use the ACCELERATE button to stay in the air < /p > < p > How long can you stay alive ? < /p> < /body > < /html>
